@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>KO ARC4 Manager レース運営サポートツール</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        h1 {
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            color: #0056b3;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .left-box {
+            flex: 1;
+        }
+
+        .right-box {
+            width: 400px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9ecef;
+        }
+
+        select,
+        input,
+        button {
+            padding: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        select,
+        input {
+            width: 100%;
+        }
+
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            padding: 12px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #004085;
+        }
+
+        .save-button {
+            background-color: #198754;
+        }
+
+        .save-button:hover {
+            background-color: #146c43;
+        }
+
+        .reset-button {
+            background-color: #6c757d;
+        }
+
+        .reset-button:hover {
+            background-color: #5c636a;
+        }
+
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .success {
+            color: #155724;
+            font-weight: bold;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .result-ponder {
+            font-size: 18px;
+            font-weight: bold;
+            color: #cc0000;
+            text-align: center;
+        }
+
+        .list-title {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .db-input {
+            width: 100%;
+        }
+
+        .db-name-input {
+            width: 100%;
+        }
+
+        .db-actions {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+
+        .db-actions button {
+            margin-top: 0;
+            padding: 4px 6px;
+            width: auto;
+            min-width: 0;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+
+        .db-actions button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .add-participant-area {
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid #ddd;
+        }
+
+        .add-participant-area h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .add-participant-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr auto;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .add-participant-row button {
+            margin-top: 0;
+            width: auto;
+            white-space: nowrap;
+            padding: 8px 12px;
+        }
+
+        .db-name-input {
+            width: 100%;
+        }
+
+        .db-actions {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .db-actions button {
+            width: auto;
+            min-width: 0;
+            margin-top: 0;
+            padding: 4px 6px;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+
+        .add-participant-area {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        .add-participant-area input {
+            margin: 0;
+        }
+
+        .add-participant-area button {
+            width: auto;
+            margin-top: 0;
+            white-space: nowrap;
+        }
+
+        .db-help {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .button-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button-area button {
+            flex: 1;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .right-box {
+                width: auto;
+            }
+        }
+    
+    .race-info-box {
+        margin-bottom: 20px;
+    }
+
+    .race-info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 16px;
+    }
+
+    .race-info-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .race-info-grid input,
+    .race-info-grid select {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .race-info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .race-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+</head>
+
+<body>
+
+<h1>KO ARC4 Manager レース運営サポートツール</h1>
+
+<div class="box race-info-box">
+    <h2>レース情報</h2>
+
+    <div class="race-info-grid">
+        <label>レースタイトル
+            <input type="text" id="race-title" value="クラス名">
+        </label>
+
+        <label>レース名
+            <input type="text" id="race-name" value="予選">
+        </label>
+
+        <label>コース名
+            <input type="text" id="course-name" value="サーキット名">
+        </label>
+
+        <label>レーススタイル
+            <select id="race-style">
+                <option value="ノーマル" selected>ノーマル</option>
+                <option value="スタッガー">スタッガー</option>
+                <option value="スプリント">スプリント</option>
+            </select>
+        </label>
+
+        <label>ディレイ[sec]
+            <input type="number" id="race-delay" value="10" min="0">
+        </label>
+
+        <label>ラップリミット
+            <input type="number" id="lap-limit" value="0" min="0">
+        </label>
+
+        <label>レース時間[min]
+            <input type="number" id="race-time" value="3" min="0" step="0.1">
+        </label>
+
+        <label>ラウンド
+            <input type="number" id="race-round" value="1" min="1">
+        </label>
+
+        <label>ヒート
+            <input type="number" id="race-heat" value="1" min="1">
+        </label>
+
+        <label>レース日時
+            <input type="date" id="race-date">
+        </label>
+
+        <label>レース開始時刻
+            <input type="time" id="race-start-time" step="1">
+        </label>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- 左側：当日のヒート入力と結果表示 -->
+    <div class="box left-box">
+
+        <h2>出走グリッド設定（1〜10）</h2>
+
+        <p>
+            くじ引き等で決まったグリッド番号にドライバーを選択し、
+            「自動割り当て計算」を押してください。
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">グリッド</th>
+                    <th style="width: 35%;">ドライバー選択</th>
+                    <th style="width: 30%;">手持ちポンダー</th>
+                    <th style="width: 20%;">決定ポンダー</th>
+                </tr>
+            </thead>
+
+            <tbody id="heat-tbody">
+            </tbody>
+        </table>
+
+        <button onclick="calculatePonders()">
+            ⚡ 自動割り当て計算を実行
+        </button>
+
+        <button class="save-button" onclick="exportCSV()">
+            📄 CSVを出力
+        </button>
+
+        <div id="error-msg" class="error"></div>
+        <div id="success-msg" class="success"></div>
+
+    </div>
+
+
+    <!-- 右側：参加者手持ちデータベース -->
+    <div class="box right-box">
+
+        <h2>参加者手持ちデータ一覧</h2>
+
+        <p class="db-help">
+            各参加者が所有しているポンダー番号を入力してください。<br>
+            複数ある場合は「,」で区切ります。
+            <br>
+            例：<b>01, 06, 10</b>
+        </p>
+
+        <div id="db-view"></div>
+
+        <div class="button-area">
+            <button class="save-button" onclick="saveDatabase()">
+                💾 設定を保存
+            </button>
+
+            <button class="reset-button" onclick="resetDatabase()">
+                🔄 初期値に戻す
+            </button>
+        </div>
+
+        <div id="db-save-msg" class="success"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+// ========================================
+// 初期データ
+// ========================================
+
+const DEFAULT_DRIVER_DATABASE = {
+    "マエズミ": ["01", "06", "10"],
+    "スナハラ": ["03", "09"],
+    "キヨカズ": ["05"],
+    "ソウタ": ["07", "02"],
+    "コウノ": ["08"],
+};
+
+// ========================================
+// 現在使用するデータベース
+// ========================================
+
+let DRIVER_DATABASE = loadDatabase();
+
+const MAX_CARS = 10;
+
+
+// ========================================
+// localStorageからデータを読み込む
+// ========================================
+
+function loadDatabase() {
+
+    const savedData = localStorage.getItem("ko_arc4_public_ponder_database_v1");
+
+    if (savedData) {
+        try {
+            const parsed = JSON.parse(savedData);
+            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                return parsed;
+            }
+        } catch (error) {
+            console.error("保存データの読み込みに失敗しました", error);
+        }
+    }
+
+    // 公開版は参加者データを空の状態で開始
+    return {};
+}
+
+
+// ========================================
+// 初期化
+// ========================================
+
+function init() {
+
+    renderDatabase();
+
+    renderTableRows();
+
+    const now = new Date();
+    document.getElementById("race-date").value =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    document.getElementById("race-start-time").value =
+        `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
+
+}
+
+
+// ========================================
+// 参加者データ一覧を表示
+// ========================================
+
+function renderDatabase() {
+
+    const dbView = document.getElementById("db-view");
+    const names = Object.keys(DRIVER_DATABASE);
+
+    let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:28%;">名前</th>
+                    <th style="width:47%;">所持ポンダー</th>
+                    <th style="width:25%;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    names.forEach((name, index) => {
+        const safeId = `db_${index}`;
+
+        html += `
+            <tr>
+                <td>
+                    <input
+                        class="db-name-input"
+                        type="text"
+                        id="${safeId}_name"
+                        value="${escapeHtml(name)}"
+                    >
+                </td>
+
+                <td>
+                    <input
+                        class="db-input"
+                        type="text"
+                        id="${safeId}_ponders"
+                        value="${escapeHtml(DRIVER_DATABASE[name].join(", "))}"
+                    >
+                </td>
+
+                <td>
+                    <div class="db-actions">
+                        <button onclick="moveParticipant(${index}, -1)" ${index === 0 ? "disabled" : ""}>▲</button>
+                        <button onclick="moveParticipant(${index}, 1)" ${index === names.length - 1 ? "disabled" : ""}>▼</button>
+                        <button onclick="removeParticipant(${index})">削除</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+
+        <div class="add-participant-area">
+            <h3>参加者を追加</h3>
+            <div class="add-participant-row">
+                <input
+                    type="text"
+                    id="new-driver-name"
+                    placeholder="名前（例：サトウ）"
+                >
+                <input
+                    type="text"
+                    id="new-driver-ponders"
+                    placeholder="所持ポンダー（例：01, 06）"
+                >
+                <button type="button" onclick="addParticipant()">＋追加</button>
+            </div>
+        </div>
+    `;
+
+    dbView.innerHTML = html;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function readDatabaseFromForm() {
+
+    const names = Object.keys(DRIVER_DATABASE);
+    const newDatabase = {};
+
+    names.forEach((oldName, index) => {
+        const safeId = `db_${index}`;
+        const nameInput = document.getElementById(`${safeId}_name`);
+        const ponderInput = document.getElementById(`${safeId}_ponders`);
+
+        if (!nameInput || !ponderInput) {
+            return;
+        }
+
+        const name = nameInput.value.trim();
+        if (!name) {
+            return;
+        }
+
+        const ponders = ponderInput.value
+            .split(",")
+            .map(value => value.trim())
+            .filter(value => value !== "");
+
+        newDatabase[name] = ponders;
+    });
+
+    return newDatabase;
+}
+
+function addParticipant() {
+
+    const nameInput = document.getElementById("new-driver-name");
+    const ponderInput = document.getElementById("new-driver-ponders");
+
+    const name = nameInput.value.trim();
+
+    if (!name) {
+        alert("参加者名を入力してください。");
+        return;
+    }
+
+    const currentDatabase = readDatabaseFromForm();
+
+    if (Object.prototype.hasOwnProperty.call(currentDatabase, name)) {
+        alert("同じ名前の参加者がすでに存在します。");
+        return;
+    }
+
+    const ponders = ponderInput.value
+        .split(",")
+        .map(value => value.trim())
+        .filter(value => value !== "");
+
+    currentDatabase[name] = ponders;
+    DRIVER_DATABASE = currentDatabase;
+
+    localStorage.setItem(
+        "ko_arc4_public_ponder_database_v1",
+        JSON.stringify(DRIVER_DATABASE)
+    );
+
+    nameInput.value = "";
+    ponderInput.value = "";
+
+    renderDatabase();
+    renderTableRows();
+}
+
+function moveParticipant(index, direction) {
+
+    const currentDatabase = readDatabaseFromForm();
+    const names = Object.keys(currentDatabase);
+    const targetIndex = index + direction;
+
+    if (targetIndex < 0 || targetIndex >= names.length) {
+        return;
+    }
+
+    const reordered = {};
+    names.forEach((name, i) => {
+        if (i === index) {
+            return;
+        }
+        if (i === targetIndex) {
+            const movingName = names[index];
+            reordered[movingName] = currentDatabase[movingName];
+        }
+        reordered[name] = currentDatabase[name];
+    });
+
+    // 念のため末尾まで含めて正しい順番を作り直す
+    const finalDatabase = {};
+    const finalNames = names.slice();
+    [finalNames[index], finalNames[targetIndex]] = [finalNames[targetIndex], finalNames[index]];
+
+    finalNames.forEach(name => {
+        finalDatabase[name] = currentDatabase[name];
+    });
+
+    DRIVER_DATABASE = finalDatabase;
+
+    localStorage.setItem(
+        "ko_arc4_public_ponder_database_v1",
+        JSON.stringify(DRIVER_DATABASE)
+    );
+
+    renderDatabase();
+    renderTableRows();
+}
+
+function removeParticipant(index) {
+
+    const currentDatabase = readDatabaseFromForm();
+    const names = Object.keys(currentDatabase);
+    const name = names[index];
+
+    if (!name) {
+        return;
+    }
+
+    if (!confirm(`${name} を参加者一覧から削除しますか？`)) {
+        return;
+    }
+
+    delete currentDatabase[name];
+    DRIVER_DATABASE = currentDatabase;
+
+    localStorage.setItem(
+        "ko_arc4_public_ponder_database_v1",
+        JSON.stringify(DRIVER_DATABASE)
+    );
+
+    renderDatabase();
+    renderTableRows();
+}
+
+
+
+// ========================================
+// データベースを保存
+// ========================================
+
+function saveDatabase() {
+
+    const newDatabase = readDatabaseFromForm();
+
+    if (Object.keys(newDatabase).length === 0) {
+        alert("参加者が1名以上必要です。");
+        return;
+    }
+
+    DRIVER_DATABASE = newDatabase;
+
+    localStorage.setItem(
+        "ko_arc4_public_ponder_database_v1",
+        JSON.stringify(DRIVER_DATABASE)
+    );
+
+    // 表示を更新
+    renderDatabase();
+    renderTableRows();
+
+    const msg = document.getElementById("db-save-msg");
+
+    msg.innerText = "✅ ポンダー設定を保存しました。";
+    msg.style.display = "block";
+
+    setTimeout(() => {
+        msg.style.display = "none";
+    }, 3000);
+}
+
+
+// ========================================
+// 初期値に戻す
+// ========================================
+
+function resetDatabase() {
+
+    if (!confirm("ポンダー設定を初期値に戻しますか？")) {
+        return;
+    }
+
+    DRIVER_DATABASE =
+        JSON.parse(JSON.stringify(DEFAULT_DRIVER_DATABASE));
+
+    localStorage.setItem(
+        "ko_arc4_public_ponder_database_v1",
+        JSON.stringify(DRIVER_DATABASE)
+    );
+
+    renderDatabase();
+    renderTableRows();
+
+    const msg = document.getElementById("db-save-msg");
+
+    msg.innerText = "🔄 初期値に戻しました。";
+    msg.style.display = "block";
+
+    setTimeout(() => {
+        msg.style.display = "none";
+    }, 3000);
+}
+
+
+// ========================================
+// ヒート設定テーブル
+// ========================================
+
+function renderTableRows() {
+
+    const tbody = document.getElementById("heat-tbody");
+
+    let html = "";
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+
+        html += `
+            <tr>
+
+                <td>
+                    <b>${i}</b>
+                </td>
+
+                <td>
+                    <select
+                        id="p${i}"
+                        onchange="updatePonders(${i})">
+                    </select>
+                </td>
+
+                <td>
+                    <div
+                        id="list${i}"
+                        class="list-title">
+                        -
+                    </div>
+                </td>
+
+                <td>
+                    <div
+                        id="res${i}"
+                        class="result-ponder">
+                        -
+                    </div>
+                </td>
+
+            </tr>
+        `;
+    }
+
+    tbody.innerHTML = html;
+
+
+    // ドライバー選択欄を作る
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+
+        const select = document.getElementById(`p${i}`);
+
+        select.innerHTML =
+            '<option value="">-- 空き --</option>';
+
+        for (let name in DRIVER_DATABASE) {
+
+            select.innerHTML +=
+                `<option value="${name}">${name}</option>`;
+        }
+    }
+}
+
+
+// ========================================
+// ドライバー選択時
+// ========================================
+
+function updatePonders(index) {
+
+    const name =
+        document.getElementById(`p${index}`).value;
+
+    const listDiv =
+        document.getElementById(`list${index}`);
+
+    if (name && DRIVER_DATABASE[name]) {
+
+        if (DRIVER_DATABASE[name].length > 0) {
+
+            listDiv.innerText =
+                DRIVER_DATABASE[name].join(", ") + " 番";
+
+        } else {
+
+            listDiv.innerText =
+                "ポンダーなし";
+        }
+
+    } else {
+
+        listDiv.innerText = "-";
+    }
+
+    document.getElementById(`res${index}`).innerText = "-";
+
+    document.getElementById("error-msg")
+        .style.display = "none";
+
+    document.getElementById("success-msg")
+        .style.display = "none";
+}
+
+
+// ========================================
+// ポンダー割り当て計算
+// ========================================
+
+function calculatePonders() {
+
+    const errorMsg =
+        document.getElementById("error-msg");
+
+    const successMsg =
+        document.getElementById("success-msg");
+
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+
+
+    const activePositions = [];
+    const currentDrivers = [];
+
+
+    // 選択されたドライバーを取得
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+
+        const name =
+            document.getElementById(`p${i}`).value;
+
+        if (name) {
+
+            activePositions.push(i);
+            currentDrivers.push(name);
+
+        }
+    }
+
+
+    // 2人未満
+
+    if (currentDrivers.length < 2) {
+
+        errorMsg.innerText =
+            "計算を行うには、少なくとも2名以上のドライバーを選択してください。";
+
+        errorMsg.style.display = "block";
+
+        return;
+    }
+
+
+    // 同じドライバーの重複
+
+    if (
+        new Set(currentDrivers).size !==
+        currentDrivers.length
+    ) {
+
+        errorMsg.innerText =
+            "同じドライバーが複数のグリッドに重複して選択されています。";
+
+        errorMsg.style.display = "block";
+
+        return;
+    }
+
+
+    // 前回結果をクリア
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+
+        document.getElementById(`res${i}`).innerText = "-";
+    }
+
+
+    const totalActive =
+        currentDrivers.length;
+
+    const assigned =
+        new Array(totalActive).fill(null);
+
+    const usedPonders =
+        new Set();
+
+
+    // ========================================
+    // バックトラック探索
+    // ========================================
+
+    function backtrack(index) {
+
+        if (index === totalActive) {
+            return true;
+        }
+
+
+        const name =
+            currentDrivers[index];
+
+        const ownedPonders =
+            DRIVER_DATABASE[name] || [];
+
+
+        for (let ponder of ownedPonders) {
+
+            if (!usedPonders.has(ponder)) {
+
+                assigned[index] = ponder;
+
+                usedPonders.add(ponder);
+
+
+                if (backtrack(index + 1)) {
+                    return true;
+                }
+
+
+                usedPonders.delete(ponder);
+
+                assigned[index] = null;
+            }
+        }
+
+
+        return false;
+    }
+
+
+    // ========================================
+    // 計算実行
+    // ========================================
+
+    if (backtrack(0)) {
+
+        for (let i = 0; i < totalActive; i++) {
+
+            const pos =
+                activePositions[i];
+
+            document.getElementById(
+                `res${pos}`
+            ).innerText =
+                assigned[i] + " 番";
+        }
+
+
+        successMsg.innerText =
+            `組み合わせが完了しました`;
+
+        successMsg.style.display = "block";
+
+    } else {
+
+        for (let i = 0; i < totalActive; i++) {
+
+            const pos =
+                activePositions[i];
+
+            document.getElementById(
+                `res${pos}`
+            ).innerText = "❌";
+        }
+
+
+        errorMsg.innerHTML =
+            "⚠️ 選択されたメンバーの手持ちだけでは番号が重複し、回避できません！<br>" +
+            "どなたかに主催者予備のポンダーを貸し出すか、他ヒートのメンバーから借りてください。";
+
+        errorMsg.style.display = "block";
+    }
+}
+
+
+// ========================================
+// ARC4 Manager用CSV出力
+// ========================================
+
+function encodeShiftJIS(text) {
+    if (typeof TextDecoder === "undefined") {
+        throw new Error("このブラウザではShift_JIS変換を利用できません。");
+    }
+
+    let decoder;
+    try {
+        decoder = new TextDecoder("shift_jis", { fatal: true });
+    } catch (e) {
+        throw new Error("このブラウザではShift_JIS変換を利用できません。");
+    }
+
+    // Shift_JIS / Windows-31J のバイト列をUnicode文字へデコードし、
+    // Unicode文字→Shift_JISバイト列の対応表を作る。
+    const map = new Map();
+
+    const addMapping = (bytes) => {
+        try {
+            const decoded = decoder.decode(new Uint8Array(bytes));
+            if (decoded && decoded.length === 1 && !map.has(decoded)) {
+                map.set(decoded, bytes);
+            }
+        } catch (e) {
+            // 不正なShift_JISバイト列は無視する。
+        }
+    };
+
+    // ASCII / 半角カナ等の1バイト文字
+    for (let b = 0x00; b <= 0xFF; b++) {
+        addMapping([b]);
+    }
+
+    // Shift_JISの2バイト文字
+    for (let lead = 0x81; lead <= 0x9F; lead++) {
+        for (let trail = 0x40; trail <= 0xFC; trail++) {
+            if (trail !== 0x7F) addMapping([lead, trail]);
+        }
+    }
+    for (let lead = 0xE0; lead <= 0xFC; lead++) {
+        for (let trail = 0x40; trail <= 0xFC; trail++) {
+            if (trail !== 0x7F) addMapping([lead, trail]);
+        }
+    }
+
+    const bytes = [];
+    for (const char of text) {
+        const code = char.codePointAt(0);
+
+        // Shift_JISで表現できるBMP文字
+        if (code <= 0xFFFF && map.has(char)) {
+            bytes.push(...map.get(char));
+        } else {
+            // ARC4 Managerへ渡せない文字は明示的にエラーにする。
+            throw new Error(`Shift_JISで表現できない文字が含まれています: ${char}`);
+        }
+    }
+
+    return new Uint8Array(bytes);
+}
+
+function exportCSV() {
+
+    const errorMsg = document.getElementById("error-msg");
+    const successMsg = document.getElementById("success-msg");
+
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+
+    // まず現在の割り当て結果を取得
+    const entries = [];
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+
+        const name = document.getElementById(`p${i}`).value;
+        const resultText = document.getElementById(`res${i}`).innerText.trim();
+
+        if (name) {
+
+            // 「02 番」→「02」
+            const ponder = resultText.replace(/\s*番\s*$/, "").trim();
+
+            if (!ponder || ponder === "-") {
+                errorMsg.innerText =
+                    "先に「自動割り当て計算」を実行してください。";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            entries.push({
+                ponder: normalizePonderNumber(ponder),
+                name: name
+            });
+        }
+    }
+
+    if (entries.length < 2) {
+        errorMsg.innerText =
+            "CSVを出力するには、少なくとも2名以上のドライバーを選択してください。";
+        errorMsg.style.display = "block";
+        return;
+    }
+
+    // 念のため、CSV上のコース番号（ポンダー番号）が重複していないか確認
+    const usedNumbers = new Set(entries.map(entry => entry.ponder));
+
+    if (usedNumbers.size !== entries.length) {
+        errorMsg.innerText =
+            "決定ポンダー番号が重複しています。再度、自動割り当て計算を実行してください。";
+        errorMsg.style.display = "block";
+        return;
+    }
+
+    // ARC4 ManagerのCSVはポンダー01～20の20枠を常に持つ。
+    // 使用ポンダーにはドライバー名、未使用ポンダーには全角数字を入れる。
+    const csvEntries = [];
+
+    for (let number = 1; number <= 20; number++) {
+
+        const ponder = String(number).padStart(2, "0");
+        const entry = entries.find(item => item.ponder === ponder);
+
+        csvEntries.push({
+            ponder: String(number),
+            name: entry ? entry.name : numberToFullWidth(String(number))
+        });
+    }
+
+    // ARC4 Manager Race Data形式
+    // レース情報は画面上の入力内容をそのままCSVへ反映する。
+    const raceTitle = document.getElementById("race-title").value;
+    const raceName = document.getElementById("race-name").value;
+    const courseName = document.getElementById("course-name").value;
+    const raceStyle = document.getElementById("race-style").value;
+    const raceDelay = document.getElementById("race-delay").value;
+    const lapLimit = document.getElementById("lap-limit").value;
+    const raceTime = document.getElementById("race-time").value;
+    const raceRound = document.getElementById("race-round").value;
+    const raceHeat = document.getElementById("race-heat").value;
+    const dateInput = document.getElementById("race-date").value;
+    const timeInput = document.getElementById("race-start-time").value;
+
+    if (!dateInput || !timeInput) {
+        errorMsg.innerText =
+            "レース日時とレース開始時刻を入力してください。";
+        errorMsg.style.display = "block";
+        return;
+    }
+
+    const dateText = dateInput.replace(/-/g, "/");
+    const timeText = timeInput.length === 5 ? `${timeInput}:00` : timeInput;
+
+    const rows = [
+        ["ARC4 Manager Race Data"],
+        ["レースタイトル", raceTitle],
+        ["レース名", raceName],
+        ["コース名", courseName],
+        ["レーススタイル", raceStyle],
+        ["ディレイ[sec]", raceDelay],
+        ["ラップリミット", lapLimit],
+        ["レース時間[min]", raceTime],
+        ["ラウンド", raceRound],
+        ["ヒート", raceHeat],
+        [],
+        ["レース日時", dateText],
+        ["レース開始時刻", timeText],
+        [],
+        ["コース", ...csvEntries.map(entry => entry.ponder)],
+        ["バンド", ...Array(20).fill("")],
+        ["名前", ...csvEntries.slice(0, 10).map(entry => entry.name), ...Array(10).fill("")]
+    ];
+
+    const csvText = rows
+        .map(row => row.map(csvEscape).join(","))
+        .join("\r\n") + "\r\n";
+
+    // ARC4 Managerの元CSVに合わせ、CSV本体をShift_JIS（CP932系）で出力する。
+    // ブラウザ標準のTextEncoderはUTF-8専用のため、Shift_JISのデコード機能を
+    // 逆引きしてUnicode文字列→Shift_JISバイト列へ変換する。
+    const sjisBytes = encodeShiftJIS(csvText);
+    const blob = new Blob([sjisBytes], {
+        type: "text/csv;charset=shift_jis;"
+    });
+
+    // レース情報をファイル名に反映（Windowsで使用できない文字は置換）
+    const sanitizeFilenamePart = (value) =>
+        String(value ?? "")
+            .trim()
+            .replace(/[\\/:*?"<>|]/g, "_")
+            .replace(/\s+/g, " ");
+
+    const filenameParts = [
+        raceTitle,
+        raceName,
+        `R${raceRound}`,
+        `H${raceHeat}`,
+        courseName,
+        dateText,
+        timeText
+    ].map(sanitizeFilenamePart);
+
+    const fileName = `${filenameParts.join("_")}.csv`;
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    successMsg.innerText =
+        `CSVを出力しました`;
+    successMsg.style.display = "block";
+}
+
+
+// ポンダー番号を必ず2桁にする
+function normalizePonderNumber(value) {
+
+    const number = parseInt(value, 10);
+
+    if (Number.isNaN(number)) {
+        return value;
+    }
+
+    return String(number).padStart(2, "0");
+}
+
+
+// 数字を全角数字へ変換（未使用ポンダー用）
+function numberToFullWidth(value) {
+
+    return String(value).replace(/[0-9]/g, char =>
+        String.fromCharCode(char.charCodeAt(0) + 0xFEE0)
+    );
+}
+
+
+// CSVセルをエスケープ
+function csvEscape(value) {
+
+    const text = String(value ?? "");
+
+    if (text.includes(",") || text.includes('"') || text.includes("\r") || text.includes("\n")) {
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    return text;
+}
+
+
+function formatDateForCSV(date) {
+
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+
+function formatTimeForCSV(date) {
+
+    return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+}
+
+
+// ========================================
+// 起動
+// ========================================
+
+window.onload = init;
+
+</script>
+
+</body>
+</html>
