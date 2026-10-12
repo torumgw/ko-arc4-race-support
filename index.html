@@ -309,7 +309,7 @@
         </label>
 
         <label>コース名
-            <input type="text" id="course-name" value="サーキット名">
+            <input type="text" id="course-name" value="コース名">
         </label>
 
         <label>レーススタイル
@@ -381,7 +381,11 @@
         </button>
 
         <button class="save-button" onclick="exportCSV()">
-            📄 CSVを出力
+            📄 ARC4 Manager用CSVを出力
+        </button>
+
+        <button onclick="exportStartOrderHTML()">
+            📋 出走順HTMLを出力
         </button>
 
         <div id="error-msg" class="error"></div>
@@ -427,13 +431,8 @@
 // 初期データ
 // ========================================
 
-const DEFAULT_DRIVER_DATABASE = {
-    "マエズミ": ["01", "06", "10"],
-    "スナハラ": ["03", "09"],
-    "キヨカズ": ["05"],
-    "ソウタ": ["07", "02"],
-    "コウノ": ["08"],
-};
+const DEFAULT_DRIVER_DATABASE = {};
+
 
 // ========================================
 // 現在使用するデータベース
@@ -1078,6 +1077,7 @@ function encodeShiftJIS(text) {
 
     // Shift_JIS / Windows-31J のバイト列をUnicode文字へデコードし、
     // Unicode文字→Shift_JISバイト列の対応表を作る。
+    // 約24,000通りなのでCSV出力時の一度だけ作成しても十分高速。
     const map = new Map();
 
     const addMapping = (bytes) => {
@@ -1122,6 +1122,144 @@ function encodeShiftJIS(text) {
     }
 
     return new Uint8Array(bytes);
+}
+
+function exportStartOrderHTML() {
+
+    const errorMsg = document.getElementById("error-msg");
+    const successMsg = document.getElementById("success-msg");
+
+    errorMsg.style.display = "none";
+    successMsg.style.display = "none";
+
+    // 選択されたドライバーの決定ポンダー番号が計算済みか確認
+    const gridEntries = [];
+    let selectedCount = 0;
+
+    for (let i = 1; i <= MAX_CARS; i++) {
+        const name = document.getElementById(`p${i}`).value;
+        const resultText = document.getElementById(`res${i}`).innerText.trim();
+        let ponder = "";
+
+        if (name) {
+            selectedCount++;
+            ponder = resultText.replace(/\s*番\s*$/, "").trim();
+
+            if (!ponder || ponder === "-" || ponder === "❌") {
+                errorMsg.innerText =
+                    "先に「自動割り当て計算」を実行し、決定ポンダー番号を確認してください。";
+                errorMsg.style.display = "block";
+                return;
+            }
+            ponder = normalizePonderNumber(ponder);
+        }
+
+        // グリッド番号1〜10を固定順で出力し、空きグリッドも行として残す
+        gridEntries.push({ grid: i, name: name, ponder: ponder });
+    }
+
+    if (selectedCount === 0) {
+        errorMsg.innerText = "出走順ファイルを出力するには、ドライバーを選択してください。";
+        errorMsg.style.display = "block";
+        return;
+    }
+
+    const raceTitle = document.getElementById("race-title").value;
+    const raceName = document.getElementById("race-name").value;
+    const courseName = document.getElementById("course-name").value;
+    const raceRound = document.getElementById("race-round").value;
+    const raceHeat = document.getElementById("race-heat").value;
+
+    // HTML形式の出走順表を作成。Excel用CSVとは拡張子と内容を明確に分ける。
+    const escapeHTML = (value) => String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const raceInfo = [
+        ["コース名", courseName],
+        ["レースタイトル", raceTitle],
+        ["レース名", raceName],
+        ["ヒート", raceHeat],
+        ["ラウンド", raceRound]
+    ];
+
+    const infoRows = raceInfo.map(([label, value]) =>
+        `<tr><th>${escapeHTML(label)}</th><td>${escapeHTML(value)}</td></tr>`
+    ).join("\n");
+
+    const orderRows = gridEntries.map(entry =>
+        `<tr><td class="number">${entry.grid}</td><td>${escapeHTML(entry.name)}</td><td class="number">${escapeHTML(entry.ponder)}</td></tr>`
+    ).join("\n");
+
+    const reportHTML = `<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>出走順 - ${escapeHTML(raceTitle)} ${escapeHTML(raceName)}</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #222; margin: 24px auto; padding: 0 16px; max-width: 900px; }
+  h1 { font-size: 1.6rem; margin-bottom: 6px; }
+  .subtitle { color: #555; margin-top: 0; }
+  h2 { font-size: 1.15rem; margin: 24px 0 8px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+  th, td { border: 1px solid #bbb; padding: 8px 10px; text-align: left; }
+  th { background: #f0f2f4; }
+  .info th { width: 32%; }
+  .number { text-align: center; width: 20%; }
+  .order thead th { text-align: center; }
+  .order tbody tr:nth-child(even) { background: #f8f9fa; }
+  .empty { color: #999; }
+  .print-button { margin: 0 0 12px; padding: 8px 14px; cursor: pointer; }
+  @media print { body { margin: 0; max-width: none; } .print-button { display: none; } }
+</style>
+</head>
+<body>
+<button class="print-button" onclick="window.print()">印刷する</button>
+<h1>出走順一覧</h1>
+<h2>レース情報</h2>
+<table class="info"><tbody>
+${infoRows}
+</tbody></table>
+<h2>出走順（グリッド番号順）</h2>
+<table class="order">
+<thead><tr><th>グリッド番号</th><th>ドライバー名</th><th>決定ポンダー番号</th></tr></thead>
+<tbody>
+${gridEntries.map(entry => `<tr><td class="number">${entry.grid}</td><td>${entry.name ? escapeHTML(entry.name) : '<span class="empty">—</span>'}</td><td class="number">${entry.ponder ? escapeHTML(entry.ponder) : '<span class="empty">—</span>'}</td></tr>`).join("\n")}
+</tbody>
+</table>
+</body>
+</html>`;
+
+    const blob = new Blob(["\ufeff", reportHTML], { type: "text/html;charset=utf-8" });
+    const sanitizeFilenamePart = (value) => String(value ?? "")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .replace(/\s+/g, " ");
+
+    const filenameParts = [
+        "出走順",
+        raceTitle,
+        raceName,
+        `H${raceHeat}`,
+        `R${raceRound}`
+    ].map(sanitizeFilenamePart);
+
+    const fileName = `${filenameParts.join("_")}.html`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    successMsg.innerText = "出走順HTMLファイルを出力しました";
+    successMsg.style.display = "block";
 }
 
 function exportCSV() {
@@ -1196,14 +1334,8 @@ function exportCSV() {
     const raceTitle = document.getElementById("race-title").value;
     const raceName = document.getElementById("race-name").value;
     const courseName = document.getElementById("course-name").value;
-    const raceStyle = document.getElementById("race-style").value;
-    const raceDelay = document.getElementById("race-delay").value;
-    const lapLimit = document.getElementById("lap-limit").value;
-    const raceTime = document.getElementById("race-time").value;
     const raceRound = document.getElementById("race-round").value;
     const raceHeat = document.getElementById("race-heat").value;
-    const dateInput = document.getElementById("race-date").value;
-    const timeInput = document.getElementById("race-start-time").value;
 
     if (!dateInput || !timeInput) {
         errorMsg.innerText =
