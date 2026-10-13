@@ -301,15 +301,24 @@
 
     <div class="race-info-grid">
         <label>レースタイトル
-            <input type="text" id="race-title" value="クラス名">
+            <input type="text" id="race-title" value="レース">
         </label>
 
         <label>レース名
-            <input type="text" id="race-name" value="予選">
+            <select id="race-name">
+                <option value="予選" selected>予選</option>
+                <option value="Ａメイン">Ａメイン</option>
+                <option value="Ｂメイン">Ｂメイン</option>
+                <option value="Ｃメイン">Ｃメイン</option>
+                <option value="Ｄメイン">Ｄメイン</option>
+                <option value="Ｅメイン">Ｅメイン</option>
+                <option value="Ｆメイン">Ｆメイン</option>
+                <option value="Ｇメイン">Ｇメイン</option>
+            </select>
         </label>
 
         <label>コース名
-            <input type="text" id="course-name" value="コース名">
+            <input type="text" id="course-name" value="サーキット名">
         </label>
 
         <label>レーススタイル
@@ -329,7 +338,7 @@
         </label>
 
         <label>レース時間[min]
-            <input type="number" id="race-time" value="3" min="0" step="0.1">
+            <input type="number" id="race-time" value="3" min="0" step="1">
         </label>
 
         <label>ラウンド
@@ -384,7 +393,7 @@
             📄 ARC4 Manager用CSVを出力
         </button>
 
-        <button onclick="exportStartOrderHTML()">
+        <button class="save-button" onclick="exportStartOrderHTML()">
             📋 出走順HTMLを出力
         </button>
 
@@ -1169,6 +1178,7 @@ function exportStartOrderHTML() {
     const courseName = document.getElementById("course-name").value;
     const raceRound = document.getElementById("race-round").value;
     const raceHeat = document.getElementById("race-heat").value;
+    const raceTime = document.getElementById("race-time").value;
 
     // HTML形式の出走順表を作成。Excel用CSVとは拡張子と内容を明確に分ける。
     const escapeHTML = (value) => String(value ?? "")
@@ -1182,6 +1192,7 @@ function exportStartOrderHTML() {
         ["コース名", courseName],
         ["レースタイトル", raceTitle],
         ["レース名", raceName],
+        ["レース時間[min]", raceTime],
         ["ヒート", raceHeat],
         ["ラウンド", raceRound]
     ];
@@ -1334,8 +1345,14 @@ function exportCSV() {
     const raceTitle = document.getElementById("race-title").value;
     const raceName = document.getElementById("race-name").value;
     const courseName = document.getElementById("course-name").value;
+    const raceStyle = document.getElementById("race-style").value;
+    const raceDelay = document.getElementById("race-delay").value;
+    const lapLimit = document.getElementById("lap-limit").value;
+    const raceTime = document.getElementById("race-time").value;
     const raceRound = document.getElementById("race-round").value;
     const raceHeat = document.getElementById("race-heat").value;
+    const dateInput = document.getElementById("race-date").value;
+    const timeInput = document.getElementById("race-start-time").value;
 
     if (!dateInput || !timeInput) {
         errorMsg.innerText =
@@ -1389,11 +1406,10 @@ function exportCSV() {
     const filenameParts = [
         raceTitle,
         raceName,
-        `R${raceRound}`,
         `H${raceHeat}`,
-        courseName,
-        dateText,
-        timeText
+        `R${raceRound}`,
+        dateInput.replace(/-/g, ""),
+        timeText.replace(/:/g, "")
     ].map(sanitizeFilenamePart);
 
     const fileName = `${filenameParts.join("_")}.csv`;
